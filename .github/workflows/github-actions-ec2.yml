@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - master  # Trigger on master branch
+      - master
 
 jobs:
   deploy:
@@ -13,13 +13,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Set up SSH key
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          echo "$EC2_SSH_KEY" > key.pem
+          chmod 600 key.pem
+
       - name: Copy files to EC2
         env:
           HOST_DNS: ${{ secrets.HOST_DNS }}
           USERNAME: ${{ secrets.USERNAME }}
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           TARGET_DIR: ${{ secrets.TARGET_DIR }}
         run: |
-          echo "$EC2_SSH_KEY" > key.pem
-          chmod 600 key.pem
           rsync -avz -e "ssh -i key.pem -o StrictHostKeyChecking=no" ./ $USERNAME@$HOST_DNS:$TARGET_DIR/
