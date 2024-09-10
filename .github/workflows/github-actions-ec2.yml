@@ -20,10 +20,24 @@ jobs:
           echo "$EC2_SSH_KEY" > key.pem
           chmod 600 key.pem
 
+      - name: Debug SSH Key
+        run: |
+          head -n 5 key.pem  # Debug SSH key (ensure correct format)
+
+      - name: Check environment variables
+        run: |
+          echo "HOST_DNS: $HOST_DNS"
+          echo "USERNAME: $USERNAME"
+          echo "TARGET_DIR: $TARGET_DIR"
+
+      - name: Test SSH connection
+        run: |
+          ssh -i key.pem -o StrictHostKeyChecking=no $USERNAME@$HOST_DNS "echo 'SSH Connection Successful'"
+
       - name: Copy files to EC2
         env:
           HOST_DNS: ${{ secrets.HOST_DNS }}
           USERNAME: ${{ secrets.USERNAME }}
           TARGET_DIR: ${{ secrets.TARGET_DIR }}
         run: |
-          rsync -avz -e "ssh -i key.pem -o StrictHostKeyChecking=no" ./ $USERNAME@$HOST_DNS:$TARGET_DIR/
+          rsync -avz -e "ssh -i key.pem -v -o StrictHostKeyChecking=no" ./ $USERNAME@$HOST_DNS:$TARGET_DIR/
